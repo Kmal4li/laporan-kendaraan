@@ -1,63 +1,223 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+
+type Report = {
+  date: string;
+  reporter: string;
+  vehicle: string;
+  plate: string;
+  location: string;
+  description: string;
+  photo?: string;
+  status: string;
+};
+
+export default function ParkingReportPage() {
+  const [form, setForm] = useState({
+    date: "",
+    reporter: "",
+    vehicle: "",
+    plate: "",
+    location: "",
+    description: "",
+    photo: "",
+  });
+
+  const [reports, setReports] = useState<Report[]>([]);
+
+  const vehiclePriority: Record<string, number> = {
+  Truk: 3,
+  Mobil: 2,
+  Motor: 1,
+};
+
+const priority = vehiclePriority[form.vehicle] ?? 0;
+
+  const status =
+    priority === 3
+      ? "Prioritas Tinggi"
+      : priority === 2
+      ? "Sedang"
+      : "Rendah";
+
+  const sortedReports = reports.sort((a, b) => {
+    const priorityA = vehiclePriority[a.vehicle];
+    const priorityB = vehiclePriority[b.vehicle];
+    return priorityB - priorityA;
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!form.date || !form.reporter || !form.vehicle || !form.location) {
+      alert("Lengkapi data terlebih dahulu");
+      return;
+    }
+
+    const newReport: Report = {
+    ...form,
+    status,
+  };
+
+    setReports((prev) => [newReport, ...prev]);
+
+    setForm({
+      date: "",
+      reporter: "",
+      vehicle: "",
+      plate: "",
+      location: "",
+      description: "",
+      photo: "",
+    });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gray-100">
+      {/* HEADER */}
+      <header className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <h1 className="text-xl font-bold">ParkirGuard (Prototype)</h1>
+          <p className="text-sm opacity-90">
+            Sistem Pelaporan Parkir Sembarangan Area Telkom
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* MAP */}
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold">Peta Lokasi Parkir Liar</h2>
+            <span className="text-xs text-gray-500">Simulasi realtime</span>
+          </div>
+
+          <div className="h-[360px] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+            Map Placeholder (Area Telkom)
+          </div>
+        </div>
+
+        {/* FORM + TABLE */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-xl shadow-sm p-5 space-y-4 text-black"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <h2 className="font-semibold">Form Laporan Parkir</h2>
+
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="h-11 border rounded-md px-3 w-full"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            <input
+              type="text"
+              placeholder="Nama Pelapor"
+              value={form.reporter}
+              onChange={(e) => setForm({ ...form, reporter: e.target.value })}
+              className="h-11 border rounded-md px-3 w-full"
+            />
+
+            <select
+              value={form.vehicle}
+              onChange={(e) => setForm({ ...form, vehicle: e.target.value })}
+              className="h-11 border rounded-md px-3 w-full"
+            >
+              <option value="">Pilih Kendaraan</option>
+              <option>Motor</option>
+              <option>Mobil</option>
+              <option>Truk</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Nomor Polisi"
+              value={form.plate}
+              onChange={(e) => setForm({ ...form, plate: e.target.value })}
+              className="h-11 border rounded-md px-3 w-full"
+            />
+
+            <input
+              type="text"
+              placeholder="Lokasi Kejadian"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              className="h-11 border rounded-md px-3 w-full"
+            />
+
+            {/* FOTO */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setForm({ ...form, photo: URL.createObjectURL(file) });
+              }}
+            />
+
+            {form.photo && (
+              <img
+                src={form.photo}
+                className="w-full h-40 object-cover rounded-md border"
+                alt="Preview"
+              />
+            )}
+
+            <textarea
+              rows={3}
+              placeholder="Deskripsi"
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              className="border rounded-md px-3 py-2 w-full"
+            />
+
+            <button className="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              Kirim Laporan
+            </button>
+          </form>
+
+          {/* TABLE */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 text-black">
+            <h2 className="font-semibold mb-3">Riwayat Laporan</h2>
+
+            {reports.length === 0 ? (
+              <p className="text-sm text-gray-500">Belum ada laporan.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b">
+                    <th>Tanggal</th>
+                    <th>Pelapor</th>
+                    <th>Kendaraan</th>
+                    <th>Plat</th>
+                    <th>Lokasi</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reports.map((r, i) => (
+                    <tr key={i} className="border-b">
+                      <td>{r.date}</td>
+                      <td>{r.reporter}</td>
+                      <td>{r.vehicle}</td>
+                      <td>{r.plate}</td>
+                      <td>{r.location}</td>
+                      <td className="text-yellow-600 font-semibold">
+                        {r.status}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </main>
     </div>
