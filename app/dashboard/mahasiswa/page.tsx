@@ -14,7 +14,6 @@ type Report = {
   status: string;
 };
 
-
 export default function ParkingReportPage() {
   const router = useRouter();
 
@@ -85,7 +84,6 @@ export default function ParkingReportPage() {
   router.replace("/login");
 };
 
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* HEADER */}
@@ -107,7 +105,6 @@ export default function ParkingReportPage() {
     </button>
   </div>
 </header>
-
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* MAP */}
