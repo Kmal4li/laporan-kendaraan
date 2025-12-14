@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 type Report = {
   date: string;
@@ -14,13 +15,17 @@ type Report = {
   status: string;
 };
 
-export default function ParkingReportPage() {
+// Leaflet harus non-SSR
+const MapPicker = dynamic(() => import("../../components/MapPicker"), {
+  ssr: false,
+});
+
+export default function DashboardMahasiswa() {
   const router = useRouter();
 
-  // 🔐 PROTEKSI LOGIN MAHASISWA
+  // 🔐 Proteksi Mahasiswa
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
-
     if (!user || user.role !== "mahasiswa") {
       router.replace("/login");
     }
@@ -45,7 +50,6 @@ export default function ParkingReportPage() {
   };
 
   const priority = vehiclePriority[form.vehicle] ?? 0;
-
   const status =
     priority === 3
       ? "Prioritas Tinggi"
@@ -54,79 +58,97 @@ export default function ParkingReportPage() {
       : "Rendah";
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!form.date || !form.reporter || !form.vehicle || !form.location) {
-      alert("Lengkapi data terlebih dahulu");
-      return;
-    }
+  if (!form.date || !form.reporter || !form.vehicle || !form.location) {
+    alert("Lengkapi data terlebih dahulu");
+    return;
+  }
 
-    const newReport: Report = {
-      ...form,
-      status,
-    };
-
-    setReports((prev) => [newReport, ...prev]);
-
-    setForm({
-      date: "",
-      reporter: "",
-      vehicle: "",
-      plate: "",
-      location: "",
-      description: "",
-      photo: "",
-    });
+  const newReport = {
+    id: Date.now(), // ID unik
+    date: form.date,
+    reporter: form.reporter,
+    title: `Parkir ${form.vehicle}`,
+    description: form.description,
+    status: "Menunggu",
   };
 
-  const handleLogout = () => {
-  localStorage.removeItem("user");
-  router.replace("/login");
+  const existingReports = JSON.parse(
+    localStorage.getItem("reports") || "[]"
+  );
+
+  const updatedReports = [newReport, ...existingReports];
+
+  localStorage.setItem("reports", JSON.stringify(updatedReports));
+
+  alert("Laporan berhasil dikirim");
+
+  setForm({
+    date: "",
+    reporter: "",
+    vehicle: "",
+    plate: "",
+    location: "",
+    description: "",
+    photo: "",
+  });
 };
+
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    router.replace("/login");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* HEADER */}
       <header className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-  <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-    <div>
-      <h1 className="text-xl font-bold">ParkirGuard (Prototype)</h1>
-      <p className="text-sm opacity-90">
-        Sistem Pelaporan Parkir Sembarangan Area Telkom
-      </p>
-    </div>
-
-    {/* LOGOUT */}
-    <button
-      onClick={handleLogout}
-      className="bg-red-600 px-4 py-2 rounded-md text-sm hover:bg-red-700"
-    >
-      Logout
-    </button>
-  </div>
-</header>
+        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold">SI PARKIR TelU</h1>
+            <p className="text-sm opacity-90">
+              Pelaporan Parkir Sembarangan – Telkom University
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 px-4 py-2 rounded-md text-sm hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* MAP */}
+        {/* MAP TELKOM */}
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="flex justify-between items-center mb-2 text-black">
             <h2 className="font-semibold">Peta Lokasi Parkir Liar</h2>
-            <span className="text-xs text-gray-500">Simulasi realtime</span>
+            <span className="text-xs text-gray-500">
+              Klik peta untuk memilih lokasi
+            </span>
           </div>
 
-          <div className="h-[360px] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-            Map Placeholder (Area Telkom)
-          </div>
+          <MapPicker
+            onSelectLocation={(lat, lng) =>
+              setForm({
+                ...form,
+                location: `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`,
+              })
+            }
+          />
         </div>
 
-        {/* FORM + TABLE */}
+        {/* FORM + RIWAYAT */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* FORM */}
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-xl shadow-sm p-5 space-y-4 text-black"
           >
-            <h2 className="font-semibold">Form Laporan Parkir</h2>
+            <h2 className="font-semibold">Form Laporan</h2>
 
             <input
               type="date"
@@ -164,13 +186,12 @@ export default function ParkingReportPage() {
 
             <input
               type="text"
-              placeholder="Lokasi Kejadian"
+              placeholder="Lokasi (otomatis dari peta)"
               value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-              className="h-11 border rounded-md px-3 w-full"
+              readOnly
+              className="h-11 border rounded-md px-3 w-full bg-gray-100"
             />
 
-            {/* FOTO */}
             <input
               type="file"
               accept="image/*"
@@ -204,7 +225,7 @@ export default function ParkingReportPage() {
             </button>
           </form>
 
-          {/* TABLE */}
+          {/* RIWAYAT */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-5 text-black">
             <h2 className="font-semibold mb-3">Riwayat Laporan</h2>
 
