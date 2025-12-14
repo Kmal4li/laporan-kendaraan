@@ -51,7 +51,7 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="bg-white p-6 rounded-xl shadow-md w-[360px] space-y-4"
       >
-        <h1 className="text-xl font-bold text-center">Login ParkirGuard</h1>
+        <h1 className="text-xl font-bold text-center">Login SIPARKIR TelU</h1>
 
         <input
           type="email"
